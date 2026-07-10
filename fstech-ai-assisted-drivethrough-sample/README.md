@@ -3,209 +3,277 @@ Copyright (c) 2024, 2026, Oracle and/or its affiliates. All rights reserved.
 The Universal Permissive License (UPL), Version 1.0 as shown at https://oss.oracle.com/licenses/upl/
 -->
 
-# FSTech Drive-Thru OCI Terraform stack
+# FSTech AI-Assisted Drive-Thru
 
-This stack deploys the full browser-based application:
+This repository provides the necessary Terraform configuration and runtime application artifacts to deploy an AI-powered drive-thru ordering assistant on Oracle Cloud Infrastructure (OCI). The solution combines OCI Generative AI Agents, OCI Vision, OCI Speech, Autonomous AI Database 26ai, Object Storage, ORDS REST APIs, and a browser-based application runtime to create a personalized drive-thru ordering experience.
 
-- Autonomous AI Database 26ai with `ORDER_DETAILS` and `OFFERS`.
-- 2,000 order-history rows and 25 offer rows, loaded idempotently. Repeated
-  registration numbers provide realistic returning-customer histories.
-- ORDS endpoints for history lookup, offer search, and order insertion.
-- OCI Generative AI Agent, session-enabled endpoint, and six Terraform-managed
-  function tools: `get_order_history`, `search_offers`, `get_weather`,
-  `get_orders`, `insert_order`, and `vision_extract_registration_number`.
-- OCI Vision-based vehicle registration recognition using the application's
-  existing plate candidate selection (it does not substitute state text such
-  as `TEXAS` for the registration).
-- OCI Speech STT and TTS. Agent replies use the `Victoria` voice.
-- A public web UI and FastAPI service on an Oracle Linux compute instance.
-- A user-selected existing VCN/public subnet or a dedicated VCN created from
-  user-supplied CIDRs, plus Object Storage, a dynamic group, and runtime IAM
-  policy.
+The solution deploys:
 
-Each deployment receives a persisted six-character suffix for globally unique
-ADB, bucket, Agent, and endpoint names. This prevents failed or parallel stacks
-from colliding with names such as `FSTECHDB`.
+* OCI Generative AI Agent and session-enabled Agent Endpoint
+* Six Terraform-managed function tools for order history, offers, weather, order lookup, order insertion, and vehicle registration extraction
+* Autonomous AI Database 26ai with `ORDER_DETAILS` and `OFFERS`
+* ORDS REST APIs for order history, offer search, order lookup, and order insertion
+* OCI Vision integration for vehicle registration recognition
+* OCI Speech STT and TTS integration using the `Victoria` voice
+* Oracle Linux application VM running FastAPI, Next.js, Nginx, and systemd services
+* Object Storage bucket for runtime and wallet bootstrap artifacts
+* Dynamic group and runtime IAM policy for instance-principal access
+* Optional dedicated VCN, public subnet, Internet Gateway, route table, and Network Security Group
 
-## OCI compartment layout
+# How It Works
 
-The selected `compartment_ocid` is treated as a clean parent. Terraform creates
-four child compartments and places resources by responsibility:
+The repository is structured as a Terraform-based Resource Manager stack combined with a bootstrapped application runtime.
 
-```text
+* `compartments.tf`:
+  * Creates Network, Data, AI, and Application child compartments under the selected parent compartment.
+* `network.tf`:
+  * Uses an existing VCN/public subnet or creates a dedicated VCN and public subnet from user-supplied CIDRs.
+  * Creates the application Network Security Group.
+* `database.tf`:
+  * Creates Autonomous AI Database 26ai.
+  * Generates the ADMIN and wallet passwords.
+* `genai.tf`:
+  * Creates or reuses a Generative AI Agent and endpoint.
+  * Creates the six function-calling tools used by the runtime.
+* `storage.tf`:
+  * Creates the private Object Storage bucket.
+  * Uploads the runtime bundle and ADB wallet.
+  * Creates temporary pre-authenticated bootstrap URLs.
+* `compute.tf`:
+  * Renders cloud-init user data.
+  * Creates the Oracle Linux application VM.
+* `iam.tf`:
+  * Creates the runtime dynamic group and IAM policy.
+  * Grants access to GenAI Agents, Vision, Speech, Object Storage, and Agent sessions.
+* `templates/cloud-init.yaml.tftpl`:
+  * Installs OS packages, Node.js, Python dependencies, Nginx, and systemd services.
+  * Downloads the runtime bundle and ADB wallet onto the VM.
+* `runtime/`:
+  * Contains FastAPI, GenAI tool reconciliation, ADB/ORDS initialization, startup scripts, seed CSV files, and the Next.js UI.
+* `iam/`:
+  * Contains optional deployer-policy guidance for non-administrator stack deployment.
+* `schema.yaml`:
+  * Provides the OCI Resource Manager guided deployment form.
+
+The solution works as follows:
+
+1. A customer uses the browser-based drive-thru UI.
+2. The UI sends text, image, or voice requests to the FastAPI service.
+3. FastAPI invokes the OCI Generative AI Agent endpoint.
+4. The Agent calls Terraform-managed function tools when it needs order history, offers, weather, order lookup, order insertion, or vehicle registration extraction.
+5. Runtime tools use OCI Vision, Open-Meteo weather data, and ORDS APIs backed by Autonomous AI Database.
+6. OCI Speech handles speech-to-text and text-to-speech for voice interactions.
+7. The Agent returns a personalized ordering response to the UI.
+
+# Solution Deployment
+
+The solution is deployed as a single OCI Resource Manager stack. Terraform creates the supporting OCI resources and the application VM bootstraps itself with cloud-init.
+
+1. Deploy the Resource Manager stack.
+2. Wait for the application VM bootstrap to finish.
+3. Validate the application URL and health endpoint.
+
+## Prerequisites
+
+* Access to an OCI tenancy and a clean parent compartment.
+* Permission to create child compartments, IAM policies, dynamic groups, networking, Object Storage, Autonomous Database, Generative AI Agent resources, and compute instances.
+* OCI Resource Manager with Terraform 1.5.x.
+* A deployment region where the following services are available:
+  * OCI Generative AI Agents
+  * Autonomous AI Database 26ai
+  * OCI Vision
+  * OCI Speech STT/TTS with the `Victoria` voice
+* Compute quota for the selected VM shape.
+  * The default shape is `VM.Standard.E4.Flex`.
+  * `VM.Standard.E5.Flex` is also supported by the Resource Manager schema.
+* Network choice:
+  * Existing VCN and public subnet, or
+  * New VCN and public subnet CIDRs supplied during stack creation.
+* Optional SSH public key for diagnostics.
+
+If deploying as a non-administrator, an administrator must first grant the required deployment permissions. See [`iam/README.md`](iam/README.md).
+
+## Part 1: Deploy the Resource Manager Stack
+
+**Note:** The following steps deploy the complete OCI drive-thru stack, including compartments, database, AI Agent resources, object storage, IAM, networking, and application runtime.
+
+1. Zip the contents of this directory.
+   * Keep `runtime/`, `templates/`, `schema.yaml`, and all Terraform files at the ZIP root.
+2. Use Oracle Resource Manager to create and apply the stack.
+   * Using the hamburger menu, go to Oracle Resource Manager.
+   * Choose `Stacks`.
+   * Click `Create stack`.
+   * Select `My configuration`.
+   * In the configuration section, select folder or ZIP upload.
+   * Upload the ZIP created from this directory.
+   * Provide a meaningful stack name.
+   * Click `Next`.
+   * Choose the clean parent `compartment`.
+   * Confirm the Resource Manager stack region.
+   * Provide the required variables:
+     * Parent application compartment
+     * Network choice
+     * Existing VCN/subnet values or new VCN/subnet CIDRs
+     * Optional resource name prefix
+     * Optional SSH public key
+     * Optional VM and ADB sizing
+     * Optional existing GenAI Agent endpoint values if reusing an Agent
+   * Click `Next`.
+   * Select `Run apply`.
+   * Click `Create`.
+3. Wait for the Terraform apply job to complete successfully.
+4. Wait 10-20 minutes for cloud-init to finish first boot on the application VM.
+5. After deployment, collect the stack outputs:
+   * `application_url`
+   * `bootstrap_health_url`
+   * `application_public_ip`
+   * `genai_agent_id`
+   * `genai_agent_endpoint_id`
+   * `ords_rest_apis`
+   * `database_verification_sql`
+   * `bootstrap_status_command`
+
+## Network Selection
+
+The stack supports two network modes.
+
+### Existing Network
+
+Use this mode to deploy the application VM into an existing VCN and public subnet.
+
+Required inputs:
+
+* Existing network compartment
+* Existing VCN
+* Existing public subnet
+
+The subnet must:
+
+* Belong to the selected VCN
+* Permit public IP addresses
+* Route `0.0.0.0/0` through an Internet Gateway
+
+The stack creates an application Network Security Group but does not edit the existing subnet route table or security lists.
+
+### Dedicated Network
+
+Use this mode to let Terraform create the VCN and public subnet.
+
+Required inputs:
+
+* New VCN CIDR
+* New public subnet CIDR
+
+The stack creates:
+
+* VCN
+* Internet Gateway
+* Public route table
+* Public subnet
+* Application Network Security Group
+
+No CIDR values are embedded in the stack. Choose non-overlapping ranges if future peering or transitive routing is planned.
+
+## Compartment Layout
+
+The selected `compartment_ocid` is treated as a parent compartment. Terraform creates four child compartments and places resources by responsibility:
+
+~~~text
 Selected parent compartment
 ├── fstech-network      Created VCN resources or the app NSG for an existing VCN
 ├── fstech-data         Autonomous AI Database 26ai
 ├── fstech-ai           Generative AI Agent and endpoint
 └── fstech-application  Compute runtime, Speech jobs, and Object Storage
-```
+~~~
 
-The `fstech` prefix follows `name_prefix`, so separate environments can use
-prefixes such as `fstdev`, `fsttest`, and `fstprod`. Runtime IAM statements
-reference the exact AI and Application child-compartment OCIDs.
+The prefix follows `name_prefix`, so separate environments can use prefixes such as `fstdev`, `fsttest`, and `fstprod`.
 
-The deployment seed files are bundled at `runtime/seed/order_details.csv` and
-`runtime/seed/offers.csv`. They are included automatically in every runtime
-archive created by Terraform.
+## Existing GenAI Agent Quota
 
-The runtime dynamic group matches instances in the dedicated Application
-compartment. Terraform creates its policy and waits for IAM propagation before
-creating the VM. Terraform is the only creator of remote function tools. At API
-startup, a small reconciliation check removes legacy duplicate tools and
-verifies that exactly the six Terraform-managed tools remain.
+If Plan or Apply reports `LimitExceeded: agent-count`, either delete an unused Agent, request a service-limit increase, or reuse an existing endpoint.
 
-## Automatic IAM setup
-
-For a zero-manual-IAM deployment in a new tenancy, run the Resource Manager
-stack as a member of the tenancy `Administrators` group. Terraform then creates
-the runtime dynamic group and every application policy automatically in
-`iam.tf`.
-
-If a non-administrator must deploy, an administrator must first authorize that
-caller because Terraform cannot grant permission to itself before its first OCI
-API operation. The optional least-practical deployment policy is documented in
-[`iam/README.md`](iam/README.md).
-
-## Resource Manager deployment (recommended)
-
-1. Zip the contents of this `terraform` directory. Keep `runtime/`,
-   `templates/`, and `schema.yaml` at the ZIP root.
-2. In OCI, open **Resource Manager > Stacks**, create a stack from the ZIP, and
-   choose the clean parent compartment under which the four application
-   compartments should be created.
-3. Select Terraform 1.5.x (OCI currently uses CLI 1.5.7).
-4. Choose whether to use an existing network or create a dedicated network:
-   - For an existing network, select its compartment, VCN, and public subnet
-     from the Resource Manager lists. The subnet must permit public IPs and
-     route `0.0.0.0/0` through an Internet Gateway.
-   - For a new network, enter the VCN and public-subnet CIDRs. No CIDR is
-     embedded in the stack. Use non-overlapping ranges if future VCN peering is
-     planned.
-5. Confirm the tenancy and compartment values, then run **Plan** and **Apply**.
-6. Open the `application_url` output. Cloud-init normally needs 10-20 minutes
-   after the instance becomes RUNNING.
-
-Resource Manager supplies its own OCI provider authentication and current
-region. Thus, the normal stack form only needs tenancy/compartment placement.
-The applying principal must either be a tenancy administrator or have the
-optional deployment policy documented above.
-
-Use a deployment region where Generative AI Agents, Autonomous AI Database
-26ai, Vision, and Speech STT/TTS with the Victoria voice are all available.
-All application and AI-service calls use the Resource Manager stack region;
-there is no embedded Chicago or Phoenix runtime region.
-
-Compartments, dynamic groups, and policies are sent through the aliased
-`oci.home` provider because OCI permits IAM CREATE, UPDATE, and DELETE calls
-only in the tenancy home region. The stack discovers that region from
-`oci_identity_region_subscriptions`; it is not a user input.
-
-### Network selection and CIDR behavior
-
-Selecting an existing VCN grants Terraform permission to inspect that VCN and
-subnet and create the application NSG/VNIC attachment. The stack does not edit
-the existing subnet's route table or security lists. It validates that the
-subnet belongs to the chosen VCN and allows public IPs; the user remains
-responsible for selecting a subnet whose route table reaches an Internet
-Gateway.
-
-Selecting a new VCN creates the VCN, Internet Gateway, public route table,
-public subnet, and application NSG. The VCN and subnet CIDRs are required stack
-inputs and have no defaults. OCI allows separate VCNs to have overlapping
-CIDRs, but such overlap complicates or prevents peering and transitive routing,
-so choose ranges according to the tenancy's network plan.
-
-### Existing GenAI Agent quota
-
-If Plan or Apply reports `LimitExceeded: agent-count`, either delete an unused
-Agent/request a service-limit increase, or reuse an existing endpoint:
+To reuse an endpoint:
 
 1. Set `create_genai_agent` to `false`.
 2. Set `existing_agent_id` to the parent Agent OCID.
 3. Set `existing_agent_endpoint_id` to the endpoint OCID.
-4. Set `existing_agent_compartment_ocid` to the compartment containing it.
+4. Set `existing_agent_compartment_ocid` to the compartment containing the Agent.
 
-Terraform will skip Agent creation, attach the six function tools to the
-supplied parent Agent, and grant the runtime dynamic group access to its
-compartment.
+Terraform will skip Agent creation, attach the six function tools to the supplied parent Agent, and grant the runtime dynamic group access to that compartment.
 
-Terraform creates the private Object Storage bucket first, then uploads the ADB
-wallet object, and finally uploads the runtime object. These are direct resource
-dependencies; no arbitrary Object Storage sleep is used. A failed bucket create
-therefore prevents either upload from starting. GenAI function tools remain
-serialized because their control plane requires stabilization between creates.
+# Post-Installation
 
-## Local Terraform deployment
+Once the deployment is complete, open the `application_url` output in a browser.
 
-Local execution also requires an OCI API-key profile and an explicit region:
+The AI-assisted drive-thru application can be used for:
 
-```bash
-cp terraform.tfvars.example terraform.tfvars
-terraform init
-terraform plan
-terraform apply
-```
+* Personalized food and drink recommendations
+* Returning-customer lookup by vehicle registration number
+* Vehicle registration extraction from uploaded images
+* Current-offer search
+* Weather-aware recommendations
+* Voice interaction through OCI Speech STT and TTS
+* Confirmed order insertion into Autonomous AI Database through ORDS
 
-Edit `terraform.tfvars` with the two OCIDs. The example selects `APIKey` auth
-and uses the `DEFAULT` profile from `~/.oci/config`.
+The `bootstrap_health_url` output reports readiness. A complete deployment returns JSON containing:
 
-## First-boot behavior
+* `"database":"ready"`
+* `"schema":"ADMIN"`
+* `"order_rows":2000` or more
+* `"offer_rows":25` or more
 
-The instance downloads the versioned application bundle, opens the generated
-ADB wallet, connects as the automatically provisioned `ADMIN` account, merges
-both CSV files into `ADMIN.ORDER_DETAILS` and `ADMIN.OFFERS`, and defines the
-ORDS routes before starting the API. No intermediate database user or manual
-database step is required. Initialization is idempotent and verifies at least
-2,000 order rows and 25 offer rows before the API is allowed to start. Systemd
-restarts the API if OCI IAM propagation is not complete on its first attempt.
-The UI service also installs its required runtime CLI and rebuilds automatically
-if cloud-init did not finish the initial frontend build. No SSH or Database
-Actions step is part of a normal deployment.
+During first boot, the health URL can remain unavailable for 10-20 minutes.
 
-The runtime is UI-only. Browser text, image, STT, and TTS requests enter through
-FastAPI behind Nginx.
+## Runtime Behavior
 
-Terraform/Resource Manager reports infrastructure creation separately from
-cloud-init. After Apply succeeds, open the `bootstrap_health_url` output. A
-complete deployment returns JSON containing `"database":"ready"`,
-`"schema":"ADMIN"`, `"order_rows":2000` (or more), and
-`"offer_rows":25` (or more). During first boot the URL can remain unavailable
-for 10-20 minutes.
+The instance downloads the versioned application bundle, opens the generated ADB wallet, connects as the automatically provisioned `ADMIN` account, merges both CSV files into `ADMIN.ORDER_DETAILS` and `ADMIN.OFFERS`, and defines the ORDS routes before starting the API.
 
-The expected ORDS module is `drive_thru`, owned by `ADMIN` and published below
-the `/ords/admin/api/` base path. It is visible in the standard ADMIN Database
-Actions REST dashboard. Use the `database_verification_sql` stack output in the
-ADMIN SQL worksheet to verify the seed counts.
+The deployment seed files are bundled at:
 
-The module publishes four explicitly named REST APIs:
+* `runtime/seed/order_details.csv`
+* `runtime/seed/offers.csv`
 
-- `GET /ords/admin/api/get_order_history?registration_number=NCK6686`
-- `GET /ords/admin/api/search_offers?registration_number=NCK6686`
-- `GET /ords/admin/api/get_orders`
-- `POST /ords/admin/api/insert_order`
+Initialization is idempotent and verifies the expected seed counts before the API starts.
 
-Their complete deployment-specific URLs are returned by the `ords_rest_apis`
-Terraform output.
+The expected ORDS module is `drive_thru`, owned by `ADMIN`, and published below the `/ords/admin/api/` base path.
 
-If an SSH key was supplied, the `bootstrap_status_command` output gives a
-diagnostic command. Otherwise use the OCI serial console or cloud-init logs.
+The module publishes four REST APIs:
 
-## VM installation and file layout
+* `GET /ords/admin/api/get_order_history?registration_number=NCK6686`
+* `GET /ords/admin/api/search_offers?registration_number=NCK6686`
+* `GET /ords/admin/api/get_orders`
+* `POST /ords/admin/api/insert_order`
 
-The VM is disposable application infrastructure. Terraform renders
-`templates/cloud-init.yaml.tftpl` into instance user data, and Oracle Linux
-cloud-init performs the complete installation without an interactive SSH or
-Database Actions step.
+The complete deployment-specific URLs are returned by the `ords_rest_apis` Terraform output.
 
-Cloud-init installs these operating-system packages:
+## Services, Ports, and Request Flow
 
-- Python 3.11, `pip`, and the Python virtual-environment tooling.
-- Nginx, `unzip`, `xz`, and SELinux/firewall support tools.
-- Node.js 22.14.0 and npm from the official Node.js binary distribution.
+Only TCP port 80 is opened publicly. Nginx is the public entry point and routes requests internally:
 
-The resulting file layout is:
+~~~text
+Browser :80 -> Nginx
+             ├── / and UI assets -> Next.js 127.0.0.1:3000
+             ├── /api/*           -> FastAPI 127.0.0.1:8000
+             └── /health          -> FastAPI 127.0.0.1:8000/health
+~~~
 
-```text
+The relevant services are:
+
+* `fstech-api.service`: initializes ADB/ORDS and GenAI tools, then runs FastAPI.
+* `fstech-ui.service`: verifies or builds the UI if needed, then runs Next.js.
+* `nginx.service`: publishes the unified application on port 80.
+
+## VM Installation and File Layout
+
+Cloud-init installs:
+
+* Python 3.11, `pip`, and virtual environment tooling
+* Nginx, `unzip`, `xz`, and SELinux/firewall support tools
+* Node.js 22.14.0 and npm from the official Node.js binary distribution
+
+The resulting VM layout is:
+
+~~~text
 /opt/fstech/
 ├── app/                    Extracted application runtime
 │   ├── web_api.py          FastAPI text, image, STT, and TTS bridge
@@ -221,61 +289,19 @@ The resulting file layout is:
 ├── runtime.zip             Downloaded application bundle
 └── wallet.zip              Downloaded wallet archive
 
-/etc/fstech.env             Generated runtime configuration (mode 0600)
+/etc/fstech.env             Generated runtime configuration
 /etc/systemd/system/fstech-api.service
 /etc/systemd/system/fstech-ui.service
 /etc/nginx/conf.d/fstech.conf
-```
+~~~
 
-`/etc/fstech.env` contains generated endpoints and database credentials and
-must not be printed, copied into tickets, or committed. Its mode is `0600`, and
-it is readable only by the `fstech` service account and root. The API startup
-script loads it into the process. The ADB wallet password and ADMIN password
-are generated by Terraform and are also present as sensitive values in
-Resource Manager state.
+`/etc/fstech.env` contains generated endpoints and database credentials. Do not print it, copy it into tickets, or commit it.
 
-The installation sequence is:
+## Instance Diagnostics
 
-1. Install OS packages, Node.js, and npm.
-2. Create the non-login `fstech` service account and `/opt/fstech` folders.
-3. Download the runtime and ADB wallet through temporary Object Storage
-   pre-authenticated URLs generated by Terraform.
-4. Create `/opt/fstech/venv` and install `runtime/requirements.txt`.
-5. Run `npm ci` and build the Next.js UI.
-6. Configure SELinux, the host firewall, Nginx, and systemd.
-7. Start the API, UI, and Nginx services.
+If bootstrap is still running or the health check is unavailable, use these read-only commands on the instance:
 
-At every API start, `start-backend.sh` retries `db_init.py` until the ADB,
-tables, seed rows, and ORDS handlers are ready. It then retries
-`agent_init.py` until the six GenAI function tools are reconciled, and finally
-starts Uvicorn. This is why systemd can temporarily show the API service as
-running while port 8000 is not listening during initial database or agent
-setup.
-
-## Services, ports, and request flow
-
-Only TCP port 80 is opened publicly. Nginx is the public entry point and routes
-requests internally:
-
-```text
-Browser :80 -> Nginx
-             ├── / and UI assets -> Next.js 127.0.0.1:3000
-             ├── /api/*           -> FastAPI 127.0.0.1:8000
-             └── /health          -> FastAPI 127.0.0.1:8000/health
-```
-
-The relevant services are:
-
-- `fstech-api.service`: initializes ADB/ORDS and GenAI tools, then runs FastAPI.
-- `fstech-ui.service`: verifies/builds the UI if needed, then runs Next.js.
-- `nginx.service`: publishes the unified application on port 80.
-
-## Instance diagnostics
-
-If bootstrap is still running or the health check is unavailable, use these
-read-only commands on the instance:
-
-```bash
+~~~bash
 sudo cloud-init status --long
 sudo tail -n 300 /var/log/cloud-init-output.log
 
@@ -291,39 +317,30 @@ sudo ss -lntp
 curl --fail http://127.0.0.1:8000/health
 curl --fail http://127.0.0.1:3000/
 curl --fail http://127.0.0.1/health
-```
+~~~
 
-Application files can be inspected with `sudo ls -la /opt/fstech/app`, and the
-generated services with `sudo systemctl cat fstech-api.service` and
-`sudo systemctl cat fstech-ui.service`. Do not display `/etc/fstech.env`
-because it contains secrets.
+Do not display `/etc/fstech.env` because it contains secrets.
 
-## Applying application updates
+## Applying Application Updates
 
-Upload the new stack ZIP, update the existing Resource Manager stack, run
-**Plan**, and then run **Apply**. Terraform versions the runtime Object Storage
-object and replaces the disposable application VM whenever that bundle
-changes. Cloud-init therefore repeats the installation and database/agent
-reconciliation against the existing ADB. Seed loading and ORDS creation are
-idempotent, so no manual copying or package installation is expected.
+Upload the new stack ZIP, update the existing Resource Manager stack, run Plan, and then run Apply. Terraform versions the runtime Object Storage object and replaces the disposable application VM whenever that bundle changes.
 
-After Apply, wait for `bootstrap_health_url` to report readiness before using
-`application_url`. Replacing the VM changes its public IP unless a reserved IP
-or load balancer is added outside this demo stack.
+Cloud-init repeats the installation and database/agent reconciliation against the existing ADB. Seed loading and ORDS creation are idempotent.
 
-## Security and production notes
+After Apply, wait for `bootstrap_health_url` to report readiness before using `application_url`. Replacing the VM changes its public IP unless a reserved IP or load balancer is added outside this demo stack.
 
-- The generated database credentials are marked sensitive by their resources
-  but remain in Terraform state. Store state in OCI Resource Manager or another
-  protected backend.
-- Using `ADMIN` for application tables and public ORDS routes provides the
-  requested zero-touch deployment, but it has a larger security blast radius
-  than a dedicated least-privilege schema. For a production deployment, move
-  these objects back to an application schema and store its credential in OCI
-  Vault.
-- Port 80 is public so the demo is immediately reachable. Add TLS, a load
-  balancer/WAF, and authentication before production use.
-- The four demo ORDS routes are public. Add ORDS OAuth/roles before exposing
-  customer or order data in production.
-- Destroying the stack deletes the database and seeded data unless OCI deletion
-  protection or backups are added first.
+## Security and Production Notes
+
+* Generated database credentials are marked sensitive by their resources but remain in Terraform state. Store state in OCI Resource Manager or another protected backend.
+* Using `ADMIN` for application tables and public ORDS routes provides a zero-touch deployment, but it has a larger security blast radius than a dedicated least-privilege schema.
+* Port 80 is public so the demo is immediately reachable. Add TLS, a load balancer or WAF, and authentication before production use.
+* The demo ORDS routes are public. Add ORDS OAuth or roles before exposing customer or order data in production.
+* Destroying the stack deletes the database and seeded data unless OCI deletion protection or backups are added first.
+
+# Clean-Up
+
+1. Navigate to Oracle Resource Manager.
+2. Select the deployed stack.
+3. Click Destroy.
+
+Destroying the stack removes the created compartments and resources, including the Autonomous Database and seeded data, unless protection or backups are added outside this demo stack.
