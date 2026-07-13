@@ -6,7 +6,7 @@ locals {
   wallet_url  = "https://objectstorage.${var.region}.oraclecloud.com${oci_objectstorage_preauthrequest.wallet.access_uri}"
   ords_root   = "${trimsuffix(oci_database_autonomous_database.app.connection_urls[0].ords_url, "/")}/admin/api"
 
-  cloud_init = templatefile("${path.module}/templates/cloud-init.yaml.tftpl", {
+  cloud_init = templatefile("${path.module}/templates/app.cloud-init.tftpl", {
     runtime_url         = local.runtime_url
     wallet_url          = local.wallet_url
     adb_admin_password  = random_password.adb_admin.result

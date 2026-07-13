@@ -45,7 +45,7 @@ The repository is structured as a Terraform-based Resource Manager stack combine
 * `iam.tf`:
   * Creates the runtime dynamic group and IAM policy.
   * Grants access to GenAI Agents, Vision, Speech, Object Storage, and Agent sessions.
-* `templates/cloud-init.yaml.tftpl`:
+* `templates/app.cloud-init.tftpl`:
   * Installs OS packages, Node.js, Python dependencies, Nginx, and systemd services.
   * Downloads the runtime bundle and ADB wallet onto the VM.
 * `runtime/`:
