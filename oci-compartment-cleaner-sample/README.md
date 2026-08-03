@@ -195,10 +195,6 @@ availability domain where relevant, and each paginated OCI list call. If a run
 slows down or appears blocked, the last log line should identify the service,
 compartment, subnet, VNIC, or list page being processed.
 
-`MethodsToScan.txt` is a working reference for additional OCI service methods
-that may expose network references. Not every method in that file is currently
-implemented by `network_usage_audit.py`.
-
 ## Output Files
 
 Every run creates a log and two dry-run plan files under `delete_runs/` by
