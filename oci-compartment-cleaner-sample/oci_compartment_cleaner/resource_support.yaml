@@ -1,6 +1,3 @@
-# Copyright (c) 2024, 2026, Oracle and/or its affiliates. All rights reserved.
-# The Universal Permissive License (UPL), Version 1.0 as shown at https://oss.oracle.com/licenses/upl/
-
 {
   "format_version": 1,
   "manifest_note": "This file uses JSON syntax inside a .yaml file. JSON is valid YAML and avoids a runtime PyYAML dependency.",
@@ -48,6 +45,23 @@
       "pre_delete": ["disassociate_dr_protection_group"],
       "wait_for_delete": true,
       "notes": "Disassociate before delete when the group has a peer association."
+    },
+    {
+      "key": "event_rule",
+      "normalized_type": "event_rule",
+      "resource_types": ["EventRule"],
+      "aliases": ["event_rule", "eventrule"],
+      "priority": 25,
+      "action": "dynamic_delete",
+      "service": "Events",
+      "client_class": "EventsClient",
+      "method": "delete_rule",
+      "preferred_client_prefixes": ["oci.events."],
+      "wait_for_delete": true,
+      "wait_client_class": "EventsClient",
+      "wait_method": "get_rule",
+      "wait_id_parameter": "rule_id",
+      "notes": "Event rules are deleted before action targets such as Functions, Notifications, Streaming, or Object Storage resources."
     },
     {
       "key": "function",
