@@ -1,5 +1,6 @@
 # Copyright (c) 2024, 2026, Oracle and/or its affiliates. All rights reserved.
 # The Universal Permissive License (UPL), Version 1.0 as shown at https://oss.oracle.com/licenses/upl/
+
 from __future__ import annotations
 
 import json
@@ -11,7 +12,7 @@ from .models import HandlerSpec
 
 
 PACKAGE_DIR = Path(__file__).resolve().parent
-DEFAULT_RESOURCE_SUPPORT_PATH = PACKAGE_DIR / "resource_support.yaml"
+DEFAULT_RESOURCE_SUPPORT_PATH = PACKAGE_DIR / "resource_support.json"
 
 
 DEFAULT_DYNAMIC_HANDLER = HandlerSpec(
@@ -109,13 +110,7 @@ def _handler_from_dict(data: dict[str, Any]) -> HandlerSpec:
 
 
 def load_registry(path: Path | None = None) -> ResourceRegistry:
-    """Load the support manifest.
-
-    The file has a ``.yaml`` suffix for readability and future compatibility, but
-    it currently uses JSON syntax. JSON is valid YAML and keeps this script free
-    from a PyYAML dependency.
-    """
-
+    """Load the JSON support manifest."""
     manifest_path = path or DEFAULT_RESOURCE_SUPPORT_PATH
     payload = json.loads(manifest_path.read_text(encoding="utf-8"))
     handlers = [_handler_from_dict(item) for item in payload["handlers"]]

@@ -389,7 +389,7 @@ The cleaner does not delete resources in the order returned by Resource Search.
 It builds a dependency-aware plan using the support manifest:
 
 ```text
-oci_compartment_cleaner/resource_support.yaml
+oci_compartment_cleaner/resource_support.json
 ```
 
 The manifest defines:
@@ -631,7 +631,7 @@ oci_compartment_cleaner/
   context.py                  Shared execution context
   planner.py                  Dry-run plan construction
   registry.py                 Manifest loading and handler matching
-  resource_support.yaml       Resource support manifest
+  resource_support.json       Resource support manifest
   handlers/                   Service-specific handlers and pre-delete hooks
   runtime_*.py                Focused runtime modules
   tests/                      Unit tests
@@ -654,7 +654,7 @@ The package implementation is the documented entry point for new usage.
 Most support changes should start in:
 
 ```text
-oci_compartment_cleaner/resource_support.yaml
+oci_compartment_cleaner/resource_support.json
 ```
 
 Recommended workflow:

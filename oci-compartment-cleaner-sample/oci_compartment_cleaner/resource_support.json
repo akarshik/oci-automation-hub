@@ -1,9 +1,6 @@
-# Copyright (c) 2024, 2026, Oracle and/or its affiliates. All rights reserved.
-# The Universal Permissive License (UPL), Version 1.0 as shown at https://oss.oracle.com/licenses/upl/
-
 {
   "format_version": 1,
-  "manifest_note": "This file uses JSON syntax inside a .yaml file. JSON is valid YAML and avoids a runtime PyYAML dependency.",
+  "manifest_note": "This file uses JSON syntax and avoids a runtime PyYAML dependency.",
   "handlers": [
     {
       "key": "oke_cluster",
