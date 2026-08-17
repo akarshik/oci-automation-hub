@@ -29,7 +29,9 @@ The tool is intentionally conservative:
 - Python 3.
 - OCI Python SDK:
 
+
 ```bash
+python3 --version
 python3 -m pip install oci
 ```
 
@@ -46,6 +48,7 @@ Supported authentication modes:
 
 ## Quick Start
 
+By default it will use profile DEFAULT from .oci/config file.
 Run a dry-run only. This is the default behavior:
 
 ```bash
