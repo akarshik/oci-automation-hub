@@ -1,0 +1,75 @@
+# Copy this file to terraform.tfvars, then replace every REPLACE_ME value.
+# The values below are examples only; the module is not tied to San Jose.
+
+oci_config_profile = "DEFAULT"
+region             = "REPLACE_WITH_OCI_REGION"
+compartment_id     = "ocid1.compartment.oc1..REPLACE_ME"
+windows_image_ocid = "ocid1.image.REPLACE_WITH_REGION.REPLACE_ME"
+
+# Leave these empty for automatic placement: DC/SQL1 use AD-1, and SQL2 uses
+# AD-2 when available; in one-AD regions all three use AD-1.
+dc_availability_domain   = ""
+sql1_availability_domain = ""
+sql2_availability_domain = ""
+
+vcn_name         = "SQL_VCN"
+vcn_dns_label    = "sqlvcn"
+vcn_cidr         = "10.0.0.0/16"
+dc_subnet_cidr   = "10.0.10.0/24"
+sql1_subnet_cidr = "10.0.20.0/24"
+sql2_subnet_cidr = "10.0.30.0/24"
+dc_private_ip    = "10.0.10.10"
+sql1_private_ip  = "10.0.20.10"
+sql2_private_ip  = "10.0.30.10"
+
+# Credentials are sensitive. Prefer TF_VAR_* environment variables or a
+# local, uncommitted terraform.tfvars file.
+domain_name                  = "mssqlaoag.demo"
+domain_netbios_name          = "MSSQLAOAG"
+domain_admin_user            = "domainadmin"
+domain_admin_password        = ""
+sql_service_account_user     = "sqlsa"
+sql_service_account_password = ""
+local_admin_user             = "opc"
+windows_admin_password       = ""
+
+auto_configure_domain_controller = true
+auto_configure_windows_nodes     = true
+auto_install_sql_server          = true
+install_ssms                     = true
+auto_configure_wsfc              = true
+skip_cluster_validation          = true
+automation_artifact_expiration   = "2030-01-01T00:00:00Z"
+sql_server_download_url          = "https://go.microsoft.com/fwlink/?linkid=2344626"
+ssms_download_url                = "https://aka.ms/ssms/22/release/vs_SSMS.exe"
+
+wsfc_cluster_name       = "SQLAGCLUSTER"
+wsfc_witness_path       = "C:\\ClusterWitness"
+wsfc_witness_share_name = "ClusterWitness"
+wsfc_cluster_ip_sql1    = "10.0.20.20"
+wsfc_cluster_ip_sql2    = "10.0.30.20"
+
+aoag_database_name           = "AdventureWorks2025"
+aoag_availability_group_name = "TestAOAG"
+aoag_listener_name           = "AOAG-LSN"
+aoag_listener_port           = 1433
+aoag_listener_ip_sql1        = "10.0.20.30"
+aoag_listener_ip_sql2        = "10.0.30.30"
+hadr_endpoint_name           = "Hadr_endpoint"
+hadr_endpoint_port           = 5022
+sample_database_download_url  = "https://github.com/Microsoft/sql-server-samples/releases/download/adventureworks/AdventureWorks2025.bak"
+
+shape                       = "VM.Standard.E5.Flex"
+ocpus                       = 6
+memory_in_gbs               = 16
+sql_ocpus                   = 8
+sql_memory_in_gbs           = 32
+boot_volume_size_in_gbs     = 100
+sql_data_volume_size_in_gbs = 100
+sql_data_drive_letter       = "F"
+
+dc_rdp_source_cidr          = "0.0.0.0/0"
+sql_rdp_source_cidr         = "0.0.0.0/0"
+freeform_tags = {
+  Project = "sqlagtest"
+}

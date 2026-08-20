@@ -1,0 +1,220 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1900" height="1180" viewBox="0 0 1900 1180" role="img" aria-labelledby="title desc">
+  <title id="title">SQL Server Always On Availability Groups on Oracle Cloud Infrastructure</title>
+  <desc id="desc">Terraform provisioned OCI reference architecture with a domain controller, two SQL Server nodes, WSFC quorum, private automation artifacts, and a native multi-subnet AOAG listener.</desc>
+  <defs>
+    <marker id="arrow-blue" markerWidth="10" markerHeight="10" refX="9" refY="5" orient="auto"><path d="M0,0 L10,5 L0,10 Z" fill="#246B82"/></marker>
+    <marker id="arrow-green" markerWidth="10" markerHeight="10" refX="9" refY="5" orient="auto"><path d="M0,0 L10,5 L0,10 Z" fill="#3D7A52"/></marker>
+    <marker id="arrow-red" markerWidth="10" markerHeight="10" refX="9" refY="5" orient="auto"><path d="M0,0 L10,5 L0,10 Z" fill="#C74634"/></marker>
+    <marker id="arrow-gray" markerWidth="10" markerHeight="10" refX="9" refY="5" orient="auto"><path d="M0,0 L10,5 L0,10 Z" fill="#6B7478"/></marker>
+    <style>
+      .title{font:700 31px Arial,sans-serif;fill:#312D2A;letter-spacing:.2px}
+      .subtitle{font:400 16px Arial,sans-serif;fill:#5B6266}
+      .section{font:700 17px Arial,sans-serif;fill:#312D2A}
+      .label{font:700 15px Arial,sans-serif;fill:#312D2A}
+      .body{font:400 14px Arial,sans-serif;fill:#4F5659}
+      .small{font:400 12px Arial,sans-serif;fill:#5B6266}
+      .tiny{font:400 11px Arial,sans-serif;fill:#5B6266}
+      .white{fill:#fff}
+      .line-blue{stroke:#246B82;stroke-width:2.5;fill:none;marker-end:url(#arrow-blue)}
+      .line-green{stroke:#3D7A52;stroke-width:2.5;fill:none;marker-end:url(#arrow-green)}
+      .line-red{stroke:#C74634;stroke-width:2.5;fill:none;marker-end:url(#arrow-red)}
+      .line-gray{stroke:#6B7478;stroke-width:2;fill:none;marker-end:url(#arrow-gray)}
+      .dash-blue{stroke:#246B82;stroke-width:2;stroke-dasharray:8 6;fill:none;marker-end:url(#arrow-blue)}
+      .dash-green{stroke:#3D7A52;stroke-width:2;stroke-dasharray:8 6;fill:none;marker-end:url(#arrow-green)}
+    </style>
+  </defs>
+
+  <rect width="1900" height="1180" fill="#F7F7F5"/>
+  <rect x="0" y="0" width="1900" height="92" fill="#FFFFFF"/>
+  <rect x="0" y="90" width="1900" height="2" fill="#C74634"/>
+  <text x="42" y="42" class="title">SQL Server Always On Availability Groups on OCI</text>
+  <text x="44" y="70" class="subtitle">Terraform-provisioned Windows domain, WSFC quorum, synchronous AOAG, and native multi-subnet listener</text>
+  <rect x="1435" y="24" width="416" height="42" rx="6" fill="#F1E7E3" stroke="#D9B9AF"/>
+  <text x="1456" y="50" class="label" fill="#9E3A2D">POC reference architecture</text>
+
+  <!-- Operator lane -->
+  <rect x="32" y="128" width="230" height="885" rx="10" fill="#FFFFFF" stroke="#B9C3C6" stroke-width="1.5"/>
+  <rect x="32" y="128" width="230" height="48" rx="10" fill="#312D2A"/>
+  <rect x="32" y="166" width="230" height="10" fill="#312D2A"/>
+  <text x="52" y="158" class="section white">CONTROL PLANE</text>
+  <rect x="56" y="210" width="182" height="128" rx="8" fill="#EEF3F4" stroke="#9DB5BC"/>
+  <circle cx="82" cy="238" r="16" fill="#246B82"/>
+  <path d="M75 238h14M82 231v14" stroke="#fff" stroke-width="2"/>
+  <text x="108" y="242" class="label">Terraform</text>
+  <text x="70" y="275" class="body">VCN, subnets, routes,</text>
+  <text x="70" y="294" class="body">security lists, instances,</text>
+  <text x="70" y="313" class="body">volumes and private artifacts</text>
+  <rect x="56" y="372" width="182" height="128" rx="8" fill="#F7EEE9" stroke="#D9B9AF"/>
+  <circle cx="82" cy="400" r="16" fill="#C74634"/>
+  <path d="M74 399h16M82 391v16" stroke="#fff" stroke-width="2"/>
+  <text x="108" y="404" class="label">Operator</text>
+  <text x="70" y="437" class="body">RDP / SSMS with</text>
+  <text x="70" y="456" class="body">MSSQLAOAG\domainadmin</text>
+  <text x="70" y="475" class="body">for validation and tests</text>
+  <rect x="56" y="534" width="182" height="112" rx="8" fill="#FBF6E8" stroke="#D5C083"/>
+  <text x="70" y="565" class="label">POC boundary</text>
+  <text x="70" y="591" class="body">Public subnets and public</text>
+  <text x="70" y="610" class="body">RDP are intentional here.</text>
+  <text x="70" y="629" class="body">Restrict RDP for production.</text>
+  <rect x="56" y="690" width="182" height="226" rx="8" fill="#FFFFFF" stroke="#B9C3C6"/>
+  <text x="70" y="720" class="label">Legend</text>
+  <line x1="70" y1="747" x2="116" y2="747" class="line-blue"/><text x="128" y="751" class="small">management</text>
+  <line x1="70" y1="779" x2="116" y2="779" class="line-green"/><text x="128" y="783" class="small">data / quorum</text>
+  <line x1="70" y1="811" x2="116" y2="811" class="line-red"/><text x="128" y="815" class="small">SQL / HADR</text>
+  <line x1="70" y1="843" x2="116" y2="843" class="dash-blue"/><text x="128" y="847" class="small">automation</text>
+  <text x="70" y="884" class="tiny">Icons are simplified OCI-style</text>
+  <text x="70" y="901" class="tiny">service glyphs for portability.</text>
+
+  <!-- OCI region -->
+  <rect x="292" y="128" width="1576" height="885" rx="14" fill="#FFFFFF" stroke="#759C6C" stroke-width="2"/>
+  <rect x="292" y="128" width="1576" height="48" rx="14" fill="#EAF2E8"/>
+  <rect x="292" y="166" width="1576" height="10" fill="#EAF2E8"/>
+  <circle cx="326" cy="152" r="16" fill="#3D7A52"/>
+  <path d="M316 154c4-11 14-11 19-2 9-2 12 10 5 14h-22c-7-2-7-10-2-12z" fill="none" stroke="#fff" stroke-width="2"/>
+  <text x="354" y="158" class="section">ORACLE CLOUD INFRASTRUCTURE (OCI) REGION</text>
+  <text x="1435" y="158" class="small">Compartment: OICCompartment</text>
+
+  <!-- Network boundary -->
+  <rect x="330" y="208" width="1498" height="595" rx="12" fill="#FBFCFB" stroke="#A8B8AC" stroke-width="1.5"/>
+  <text x="354" y="240" class="section">VCN • configurable CIDR</text>
+  <text x="354" y="262" class="small">Public route table → Internet Gateway • security lists only • IMDSv2-only instances</text>
+
+  <!-- IGW -->
+  <rect x="755" y="194" width="302" height="65" rx="8" fill="#EEF3F4" stroke="#9DB5BC"/>
+  <circle cx="786" cy="226" r="18" fill="#246B82"/>
+  <path d="M775 228c2-11 17-13 22-3 8-1 13 10 5 15h-25c-8-2-8-10-2-12z" fill="none" stroke="#fff" stroke-width="2"/>
+  <text x="820" y="226" class="label">Internet Gateway</text>
+  <text x="820" y="245" class="small">RDP 3389 + software downloads</text>
+  <line x1="908" y1="259" x2="908" y2="287" class="line-blue"/>
+
+  <!-- Object storage -->
+  <rect x="356" y="286" width="358" height="83" rx="8" fill="#F7EEE9" stroke="#D9B9AF"/>
+  <circle cx="389" cy="316" r="17" fill="#C74634"/>
+  <path d="M380 309h18v17h-18zM383 306h12M383 320h12" fill="none" stroke="#fff" stroke-width="2"/>
+  <text x="418" y="315" class="label">Object Storage</text>
+  <text x="418" y="335" class="small">Private bucket • PAR artifacts</text>
+  <text x="418" y="352" class="small">PowerShell first-boot packages</text>
+
+  <!-- Listener -->
+  <rect x="1452" y="286" width="338" height="83" rx="8" fill="#F7EEE9" stroke="#C74634" stroke-width="1.5"/>
+  <circle cx="1487" cy="316" r="17" fill="#C74634"/>
+  <path d="M1477 316h20M1487 306v20" stroke="#fff" stroke-width="2"/>
+  <text x="1518" y="315" class="label">AOAG-LSN • native listener</text>
+  <text x="1518" y="335" class="small">TCP 1433 • multi-subnet IPs</text>
+  <text x="1518" y="352" class="small">No OCI Load Balancer in this POC</text>
+
+  <!-- Subnet cards -->
+  <rect x="356" y="390" width="390" height="362" rx="10" fill="#FFFFFF" stroke="#759C6C" stroke-width="1.5"/>
+  <rect x="356" y="390" width="390" height="38" rx="10" fill="#EAF2E8"/><rect x="356" y="418" width="390" height="10" fill="#EAF2E8"/>
+  <text x="376" y="414" class="label">PUBLIC SUBNET • DC-VM</text>
+  <text x="376" y="449" class="small">10.0.10.0/24 • AD-1</text>
+  <rect x="376" y="470" width="350" height="136" rx="8" fill="#F8FBF7" stroke="#B4C8B5"/>
+  <circle cx="411" cy="508" r="21" fill="#3D7A52"/>
+  <path d="M399 510h24M403 501h16M403 518h16" stroke="#fff" stroke-width="2"/>
+  <text x="450" y="505" class="label">DC-VM • 10.0.10.10</text>
+  <text x="450" y="527" class="body">AD DS + DNS</text>
+  <text x="450" y="548" class="body">mssqlaoag.demo</text>
+  <text x="450" y="569" class="body">ClusterWitness SMB share</text>
+  <text x="376" y="637" class="body">Domain services → SQL1 / SQL2</text>
+  <text x="376" y="660" class="small">DNS 53 • LDAP/Kerberos • SMB 445</text>
+  <text x="376" y="700" class="small">Quorum witness: \\DC-VM.<tspan>domain</tspan>\ClusterWitness</text>
+
+  <rect x="778" y="390" width="390" height="362" rx="10" fill="#FFFFFF" stroke="#C74634" stroke-width="1.5"/>
+  <rect x="778" y="390" width="390" height="38" rx="10" fill="#F7EEE9"/><rect x="778" y="418" width="390" height="10" fill="#F7EEE9"/>
+  <text x="798" y="414" class="label">PUBLIC SUBNET • SQL1</text>
+  <text x="798" y="449" class="small">10.0.20.0/24 • AD-2</text>
+  <rect x="798" y="470" width="350" height="136" rx="8" fill="#FCF8F6" stroke="#E0BDB5"/>
+  <circle cx="833" cy="508" r="21" fill="#C74634"/>
+  <path d="M824 498h18v22h-18zM827 494h12M827 504h12M827 512h12" fill="none" stroke="#fff" stroke-width="2"/>
+  <text x="872" y="505" class="label">SQL1 • 10.0.20.10</text>
+  <text x="872" y="527" class="body">MSSQLSERVER + SSMS</text>
+  <text x="872" y="548" class="body">AOAG primary / secondary</text>
+  <text x="872" y="569" class="body">F: 100 GB SQL data volume</text>
+  <text x="798" y="637" class="body">Secondary IPs: WSFC + listener</text>
+  <text x="798" y="660" class="small">10.0.20.20 • 10.0.20.30</text>
+  <text x="798" y="700" class="small">HADR endpoint: TCP 5022</text>
+
+  <rect x="1200" y="390" width="390" height="362" rx="10" fill="#FFFFFF" stroke="#C74634" stroke-width="1.5"/>
+  <rect x="1200" y="390" width="390" height="38" rx="10" fill="#F7EEE9"/><rect x="1200" y="418" width="390" height="10" fill="#F7EEE9"/>
+  <text x="1220" y="414" class="label">PUBLIC SUBNET • SQL2</text>
+  <text x="1220" y="449" class="small">10.0.30.0/24 • AD-3 / fallback</text>
+  <rect x="1220" y="470" width="350" height="136" rx="8" fill="#FCF8F6" stroke="#E0BDB5"/>
+  <circle cx="1255" cy="508" r="21" fill="#C74634"/>
+  <path d="M1246 498h18v22h-18zM1249 494h12M1249 504h12M1249 512h12" fill="none" stroke="#fff" stroke-width="2"/>
+  <text x="1294" y="505" class="label">SQL2 • 10.0.30.10</text>
+  <text x="1294" y="527" class="body">MSSQLSERVER + SSMS</text>
+  <text x="1294" y="548" class="body">AOAG secondary / primary</text>
+  <text x="1294" y="569" class="body">F: 100 GB SQL data volume</text>
+  <text x="1220" y="637" class="body">Secondary IPs: WSFC + listener</text>
+  <text x="1220" y="660" class="small">10.0.30.20 • 10.0.30.30</text>
+  <text x="1220" y="700" class="small">HADR endpoint: TCP 5022</text>
+
+  <!-- Core links -->
+  <!-- Dedicated corridors keep the cross-subnet paths out of the node cards. -->
+  <path d="M535 369 H300 V840 H506 V882" class="dash-blue"/>
+  <!-- Control bus: shared AD, DNS, SMB witness, and WSFC control path. -->
+  <path d="M551 752 V780" class="line-green"/>
+  <path d="M973 752 V780" class="line-green"/>
+  <path d="M1395 752 V780" class="line-green"/>
+  <path d="M551 780 H1395" stroke="#3D7A52" stroke-width="2.5" fill="none"/>
+  <rect x="760" y="764" width="418" height="28" rx="14" fill="#EAF2E8" stroke="#B4C8B5"/>
+  <text x="785" y="783" class="small" fill="#3D7A52">AD / DNS / SMB witness / WSFC control bus</text>
+
+  <!-- Replication bus: a separate, bidirectional HADR path. -->
+  <path d="M973 752 V806" class="line-red"/>
+  <path d="M1395 752 V806" class="line-red"/>
+  <path d="M973 806 H1395" stroke="#C74634" stroke-width="2.5" fill="none"/>
+  <rect x="1000" y="791" width="368" height="28" rx="14" fill="#F7EEE9" stroke="#E0BDB5"/>
+  <text x="1023" y="810" class="small" fill="#C74634">WSFC + HADR TCP 5022 / synchronous commit</text>
+
+  <!-- Listener bus: both replicas connect from the right-side service corridor. -->
+  <path d="M1168 570 V825 H1810 V328 H1790" class="line-red"/>
+  <path d="M1590 570 H1810" class="line-red"/>
+  <rect x="1420" y="832" width="300" height="28" rx="14" fill="#F7EEE9" stroke="#E0BDB5"/>
+  <text x="1440" y="851" class="small" fill="#C74634">AOAG-LSN IP ownership follows primary</text>
+
+  <!-- Automation lane -->
+  <rect x="330" y="832" width="1498" height="150" rx="12" fill="#F4F7F8" stroke="#9DB5BC" stroke-width="1.5"/>
+  <text x="354" y="862" class="section">BOOTSTRAP AND OPERATIONS AUTOMATION</text>
+  <rect x="356" y="882" width="300" height="76" rx="8" fill="#FFFFFF" stroke="#9DB5BC"/>
+  <text x="378" y="911" class="label">First-boot PowerShell</text>
+  <text x="378" y="933" class="small">AD → domain join → WSFC → SQL</text>
+  <text x="378" y="950" class="small">AOAG → listener → reconciliation</text>
+  <rect x="730" y="882" width="300" height="76" rx="8" fill="#FFFFFF" stroke="#9DB5BC"/>
+  <text x="752" y="911" class="label">Readiness markers + logs</text>
+  <text x="752" y="933" class="small">DOMAIN_READY • WSFC_READY</text>
+  <text x="752" y="950" class="small">TASK_5_4 • TASK_5_5</text>
+  <rect x="1104" y="882" width="300" height="76" rx="8" fill="#FFFFFF" stroke="#9DB5BC"/>
+  <text x="1126" y="911" class="label">Manual seed workflow</text>
+  <text x="1126" y="933" class="small">SQL1 full/log backup → witness</text>
+  <text x="1126" y="950" class="small">SQL2 restore NORECOVERY → join AG</text>
+  <rect x="1478" y="882" width="312" height="76" rx="8" fill="#FFFFFF" stroke="#9DB5BC"/>
+  <text x="1500" y="911" class="label">Guarded failover</text>
+  <text x="1500" y="933" class="small">Synchronized → planned failover</text>
+  <text x="1500" y="950" class="small">Failback only after resync</text>
+  <path d="M506 882 V820 H551 V752" class="dash-blue"/>
+  <path d="M506 882 V820 H973 V752" class="dash-blue"/>
+  <path d="M506 882 V820 H1395 V752" class="dash-blue"/>
+  <path d="M1030 920 H1104" class="dash-blue"/>
+  <path d="M1404 920 H1478" class="dash-blue"/>
+
+  <!-- External management links -->
+  <path d="M262 235 H292" class="line-blue"/>
+  <text x="274" y="225" class="tiny" fill="#246B82">OCI API</text>
+  <path d="M262 435 H356" class="line-blue"/>
+  <text x="276" y="425" class="tiny" fill="#246B82">RDP / SSMS</text>
+
+  <!-- Callouts -->
+  <rect x="1630" y="410" width="160" height="117" rx="8" fill="#FBF6E8" stroke="#D5C083"/>
+  <text x="1648" y="438" class="label">HA contract</text>
+  <text x="1648" y="461" class="small">one writable</text>
+  <text x="1648" y="478" class="small">primary at a time</text>
+  <text x="1648" y="501" class="small">automatic failover</text>
+  <text x="1648" y="518" class="small">needs quorum + sync</text>
+
+  <rect x="1320" y="1030" width="508" height="72" rx="8" fill="#F1E7E3" stroke="#D9B9AF"/>
+  <text x="1342" y="1058" class="label">Production hardening next</text>
+  <text x="1342" y="1081" class="small">Private subnets, bastion, restricted RDP, backups, monitoring, DR, and patch governance</text>
+  <text x="44" y="1076" class="small">Reference implementation • region-neutral Terraform inputs • no OCI Load Balancer</text>
+  <text x="44" y="1097" class="small">Official OCI diagram toolkit: docs.oracle.com/en-us/iaas/Content/General/Reference/graphicsfordiagrams.htm</text>
+</svg>
