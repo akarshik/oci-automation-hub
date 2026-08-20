@@ -1,7 +1,20 @@
+# Copyright (c) 2024, 2026, Oracle and/or its affiliates. All rights reserved.
+# The Universal Permissive License (UPL), Version 1.0 as shown at https://oss.oracle.com/licenses/upl/
 variable "oci_config_profile" {
-  description = "OCI CLI config profile to use from ~/.oci/config."
+  description = "OCI CLI config profile to use from ~/.oci/config for a local deployment. Ignored by OCI Resource Manager."
   type        = string
   default     = "DEFAULT"
+}
+
+variable "execution_environment" {
+  description = "Terraform execution environment. Use local for a workstation/OCI CLI deployment or resource_manager for an OCI Resource Manager stack."
+  type        = string
+  default     = "local"
+
+  validation {
+    condition     = contains(["local", "resource_manager"], var.execution_environment)
+    error_message = "execution_environment must be either local or resource_manager."
+  }
 }
 
 variable "region" {

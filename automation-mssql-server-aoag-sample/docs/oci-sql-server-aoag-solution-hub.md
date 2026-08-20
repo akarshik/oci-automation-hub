@@ -1,3 +1,5 @@
+<!-- Copyright (c) 2024, 2026, Oracle and/or its affiliates. All rights reserved. -->
+<!-- The Universal Permissive License (UPL), Version 1.0 as shown at https://oss.oracle.com/licenses/upl/ -->
 # Automated SQL Server Always On Availability Groups on OCI
 
 ## Overview
@@ -55,13 +57,11 @@ Manual seeding is intentional. It makes the backup, restore, and `NORECOVERY` st
 
 ## Reference Architecture
 
-![SQL Server Always On Availability Groups on OCI reference architecture](oci-sql-server-aoag-architecture.svg)
+![SQL Server Always On Availability Groups on OCI reference architecture](oci-sql-server-aoag-architecture.png)
 
-**Editable Draw.io source:** [OCI SQL Server AOAG architecture](oci-sql-server-aoag-architecture.drawio)
+The PNG follows the actual execution order: Terraform provisions OCI, `DC-VM` is created and promoted first, SQL1 and SQL2 are created next, the SQL nodes join the domain, SQL runs under `MSSQLAOAG\\sqlsa`, SQL Server and SSMS are installed, WSFC and the file-share witness are configured, the sample database is backed up and restored with `NORECOVERY`, the AOAG is configured and synchronized, and only then is `AOAG-LSN` created and failover readiness validated. This POC uses a native SQL Server listener and does not use an OCI Load Balancer.
 
-The diagram separates the operator/control plane, OCI region boundary, VCN and subnet placement, Windows domain and quorum path, SQL replication path, listener path, and staged automation path. It is intentionally explicit about the native AOAG listener and the fact that this POC does not use an OCI Load Balancer.
-
-For official OCI service stencils and templates, use Oracle's [OCI Architecture Diagram Toolkit](https://docs.oracle.com/en-us/iaas/Content/General/Reference/graphicsfordiagrams.htm). The editable source is kept as a portable Draw.io artifact so the service glyphs can be refreshed from the current OCI toolkit without changing the architecture or data flows.
+For official OCI service stencils and templates, use Oracle's [OCI Architecture Diagram Toolkit](https://docs.oracle.com/en-us/iaas/Content/General/Reference/graphicsfordiagrams.htm). The published architecture artifact for this repository is the PNG above.
 
 ## End-to-End Flow
 
@@ -312,15 +312,28 @@ This is a single-primary AOAG design. Both replicas participate in availability,
 cd terraform-sanjose-aoag
 cp terraform.tfvars.example terraform.tfvars
 
-# Prefer environment variables or a protected local tfvars file.
+# Edit terraform.tfvars and replace every REPLACE_ME value. Choose one
+# credential method below; do not use both methods for the same variable.
+
+# Option A: Prefer environment variables.
 export TF_VAR_domain_admin_password='<domain-admin-password>'
 export TF_VAR_windows_admin_password='<local-windows-password>'
 export TF_VAR_sql_service_account_password='<sql-service-account-password>'
+
+# Option B: Uncomment the password settings in the local, gitignored
+# terraform.tfvars file. Empty Windows and SQL service password values reuse
+# domain_admin_password for this POC.
 
 terraform init
 terraform plan
 terraform apply
 ```
+
+### OCI Resource Manager deployment
+
+The same Terraform can be deployed through an OCI Resource Manager stack. Create the stack from the Git repository or a clean ZIP of this directory, set `execution_environment = "resource_manager"`, and provide the target region, compartment, Windows image, network values, and passwords through the Stack variables page. Resource Manager supplies OCI authentication and manages state, so users do not run `terraform init` or set `TF_VAR_*` shell variables for this deployment path.
+
+Do not upload `.terraform`, `terraform.tfstate*`, `terraform.tfvars`, plans, or logs. Run a Resource Manager **Plan** job, then an **Apply** job after review; use a **Destroy** job for cleanup. The stack operator requires compartment permissions to manage networking, compute, block volumes, private IPs, and the Object Storage automation artifacts. Treat stack state and job logs as sensitive because the bootstrap uses account passwords.
 
 The same directory can be used for a clean POC recreation:
 

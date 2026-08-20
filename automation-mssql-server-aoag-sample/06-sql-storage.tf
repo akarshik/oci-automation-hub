@@ -1,3 +1,5 @@
+# Copyright (c) 2024, 2026, Oracle and/or its affiliates. All rights reserved.
+# The Universal Permissive License (UPL), Version 1.0 as shown at https://oss.oracle.com/licenses/upl/
 resource "oci_core_volume" "sql1_data" {
   availability_domain = local.selected_sql1_availability_domain
   compartment_id      = var.compartment_id

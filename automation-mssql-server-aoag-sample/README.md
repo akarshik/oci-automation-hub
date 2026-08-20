@@ -1,3 +1,5 @@
+<!-- Copyright (c) 2024, 2026, Oracle and/or its affiliates. All rights reserved. -->
+<!-- The Universal Permissive License (UPL), Version 1.0 as shown at https://oss.oracle.com/licenses/upl/ -->
 # SQL Server AOAG Terraform
 
 This folder is a region-neutral Terraform build for the OCI SQL Server AOAG lab. It follows the Oracle SQL Server AOAG tutorial concept, with the POC changes actually used here:
@@ -25,6 +27,7 @@ This is a recreate configuration, not an import of the currently stopped VMs. If
 - `06-sql-storage.tf`: One 100 GB paravirtualized block volume for each SQL node.
 - `07-outputs.tf`: RDP IPs, private IPs, storage volume IDs, and post-provisioning values.
 - `08-automation-artifacts.tf`: Private Object Storage bucket, uploaded PowerShell scripts, and object-specific PARs used by the Windows bootstraps.
+- `schema.yaml`: OCI Resource Manager Stack form, including password controls for sensitive inputs.
 - `terraform.tfvars.example`: Copy to `terraform.tfvars` and update before apply.
 - `templates/dc-user-data.ps1.tftpl`: Thin launcher that injects the compressed DC script into `DC-VM`.
 - `templates/windows-node-user-data.ps1.tftpl`: Thin first-boot downloader/launcher for `SQL1` and `SQL2`.
@@ -45,6 +48,20 @@ Terraform state, local variable files, plans, and the `.terraform` directory are
 ```bash
 cd terraform-sanjose-aoag
 cp terraform.tfvars.example terraform.tfvars
+
+# Edit terraform.tfvars and replace every REPLACE_ME value. Then choose one
+# credential method below. Do not use both methods for the same variable.
+
+# Option A: recommended for local deployment. Passwords are not written to
+# terraform.tfvars.
+export TF_VAR_domain_admin_password='<domain-admin-password>'
+export TF_VAR_windows_admin_password='<local-windows-password>'
+export TF_VAR_sql_service_account_password='<sql-service-account-password>'
+
+# Option B: uncomment and set domain_admin_password in the local,
+# gitignored terraform.tfvars file. The other two password fields can remain
+# empty to reuse the domain-admin password for this POC.
+
 terraform init
 terraform plan
 terraform apply
@@ -59,7 +76,19 @@ terraform apply
 
 Do not delete `terraform.tfstate` before `terraform destroy`; doing so would orphan the OCI resources from Terraform's tracking.
 
-Set `domain_admin_password` in `terraform.tfvars` before `terraform apply` when `auto_configure_domain_controller = true`. If `windows_admin_password` is empty, Terraform reuses `domain_admin_password` for the local `Administrator` and `opc` passwords in this POC.
+`domain_admin_password` must be supplied before `terraform apply` when `auto_configure_domain_controller = true`. Supply it either through `TF_VAR_domain_admin_password` or in the local, ignored `terraform.tfvars` file. If `windows_admin_password` or `sql_service_account_password` is omitted or empty, Terraform reuses `domain_admin_password` for this POC.
+
+## Deploy with OCI Resource Manager
+
+This configuration can run as an OCI Resource Manager stack instead of from a local workstation. Resource Manager supplies OCI authentication and manages the Terraform state, so do not configure an OCI CLI profile or run `terraform init` locally for this path.
+
+1. In the OCI Console, go to **Developer Services** > **Resource Manager** > **Stacks** and create a stack from this Git repository or from a clean ZIP of this directory.
+2. Use this directory as the stack working directory. Do not include `.terraform`, any `terraform.tfstate*` file, `terraform.tfvars`, plans, or logs in the uploaded source.
+3. Set `execution_environment` to `resource_manager`. Set the region, compartment, Windows image, network values, and sizing in the Stack variables page.
+4. Enter `domain_admin_password` in the password field. The optional Windows and SQL service password fields may be left blank to reuse that password for this POC, or set independently. Do not use `TF_VAR_*` commands in Resource Manager.
+5. Run a **Plan** job, review it, then run an **Apply** job. Use a Resource Manager **Destroy** job when removing the environment.
+
+The Resource Manager user or group needs permission in the target compartment to manage the VCN, compute instances, boot and block volumes, private IPs, Object Storage objects/bucket, and associated networking resources. Treat the stack state and job logs as sensitive because the first-boot automation handles account passwords.
 
 Terraform reports the public IPs when OCI has finished creating the instances. That is not the end of the Windows work: first-boot scripts continue through renames, reboots, domain promotion, SQL installation, WSFC, restores, and AOAG configuration. Wait at least 10-15 minutes after the IPs appear before testing; on a fresh deployment, allow the DC promotion cycle roughly 20-25 minutes. Do not destroy and redeploy just because the IP output appeared.
 

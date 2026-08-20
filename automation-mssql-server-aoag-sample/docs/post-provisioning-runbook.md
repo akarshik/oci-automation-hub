@@ -1,3 +1,5 @@
+<!-- Copyright (c) 2024, 2026, Oracle and/or its affiliates. All rights reserved. -->
+<!-- The Universal Permissive License (UPL), Version 1.0 as shown at https://oss.oracle.com/licenses/upl/ -->
 # Post-Provisioning Runbook
 
 Terraform creates the OCI layer, then Windows first-boot automation continues asynchronously. When Terraform prints the instance IPs, wait at least 10-15 minutes before testing. A fresh DC promotion can take roughly 20-25 minutes, and SQL Server/SSMS downloads can extend the SQL node time. Use the ready-marker checks below as the completion signal; do not treat the Terraform apply timestamp as bootstrap completion.

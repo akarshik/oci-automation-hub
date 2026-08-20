@@ -1,7 +1,12 @@
+# Copyright (c) 2024, 2026, Oracle and/or its affiliates. All rights reserved.
+# The Universal Permissive License (UPL), Version 1.0 as shown at https://oss.oracle.com/licenses/upl/
 # Copy this file to terraform.tfvars, then replace every REPLACE_ME value.
 # The values below are examples only; the module is not tied to San Jose.
 
-oci_config_profile = "DEFAULT"
+# For a local CLI deployment use "local". For an OCI Resource Manager stack,
+# set this to "resource_manager" in the Stack variables page.
+execution_environment = "local"
+oci_config_profile    = "DEFAULT" # Used only when execution_environment = "local".
 region             = "REPLACE_WITH_OCI_REGION"
 compartment_id     = "ocid1.compartment.oc1..REPLACE_ME"
 windows_image_ocid = "ocid1.image.REPLACE_WITH_REGION.REPLACE_ME"
@@ -22,16 +27,20 @@ dc_private_ip    = "10.0.10.10"
 sql1_private_ip  = "10.0.20.10"
 sql2_private_ip  = "10.0.30.10"
 
-# Credentials are sensitive. Prefer TF_VAR_* environment variables or a
-# local, uncommitted terraform.tfvars file.
+# Credentials are sensitive. Choose one method after copying this file:
+# 1. Keep the password lines commented and set the TF_VAR_* environment
+#    variables before running Terraform; or
+# 2. Uncomment and populate the password lines in your local, uncommitted
+#    terraform.tfvars file. Never commit real passwords.
 domain_name                  = "mssqlaoag.demo"
 domain_netbios_name          = "MSSQLAOAG"
 domain_admin_user            = "domainadmin"
-domain_admin_password        = ""
 sql_service_account_user     = "sqlsa"
-sql_service_account_password = ""
 local_admin_user             = "opc"
-windows_admin_password       = ""
+
+# domain_admin_password        = "REPLACE_WITH_DOMAIN_ADMIN_PASSWORD"
+# sql_service_account_password = "" # Empty reuses domain_admin_password for this POC.
+# windows_admin_password       = "" # Empty reuses domain_admin_password for local Administrator and opc.
 
 auto_configure_domain_controller = true
 auto_configure_windows_nodes     = true
