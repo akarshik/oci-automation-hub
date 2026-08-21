@@ -18,99 +18,110 @@ locals {
   aoag_listener_ips                = join(",", [var.aoag_listener_ip_sql1, var.aoag_listener_ip_sql2])
   wsfc_witness_share               = "\\\\DC-VM.${var.domain_name}\\${var.wsfc_witness_share_name}"
 
-  dc_user_data = var.auto_configure_domain_controller ? base64encode(templatefile("${path.module}/templates/dc-user-data.ps1.tftpl", {
-    script_body_gzip_base64      = base64gzip(file("${path.module}/scripts/dc/01-configure-domain-controller.ps1"))
-    domain_name                  = var.domain_name
-    domain_netbios_name          = var.domain_netbios_name
-    domain_admin_user            = var.domain_admin_user
-    sql_service_account_user     = var.sql_service_account_user
-    local_admin_user             = var.local_admin_user
-    target_computer_name         = "DC-VM"
-    dc_private_ip                = var.dc_private_ip
-    domain_admin_password        = replace(local.effective_domain_admin_password, "'", "''")
-    sql_service_account_password = replace(local.effective_sql_service_password, "'", "''")
-    windows_admin_password       = replace(local.effective_windows_admin_password, "'", "''")
-    witness_path                 = var.wsfc_witness_path
-    witness_share_name           = var.wsfc_witness_share_name
-  })) : null
+  # Cloudbase-init identifies #ps1_sysnative from the first rendered user-data line.
+  # Keep that directive outside the UPL-headed template source.
+  dc_user_data = var.auto_configure_domain_controller ? base64encode(join("\r\n", [
+    "#ps1_sysnative",
+    templatefile("${path.module}/templates/dc-user-data.ps1.tftpl", {
+      script_body_gzip_base64      = base64gzip(file("${path.module}/scripts/dc/01-configure-domain-controller.ps1"))
+      domain_name                  = var.domain_name
+      domain_netbios_name          = var.domain_netbios_name
+      domain_admin_user            = var.domain_admin_user
+      sql_service_account_user     = var.sql_service_account_user
+      local_admin_user             = var.local_admin_user
+      target_computer_name         = "DC-VM"
+      dc_private_ip                = var.dc_private_ip
+      domain_admin_password        = replace(local.effective_domain_admin_password, "'", "''")
+      sql_service_account_password = replace(local.effective_sql_service_password, "'", "''")
+      windows_admin_password       = replace(local.effective_windows_admin_password, "'", "''")
+      witness_path                 = var.wsfc_witness_path
+      witness_share_name           = var.wsfc_witness_share_name
+    }),
+  ])) : null
 
-  sql1_user_data = var.auto_configure_windows_nodes ? base64encode(templatefile("${path.module}/templates/windows-node-user-data.ps1.tftpl", {
-    sql_script_url                = local.automation_object_urls.sql
-    wsfc_script_url               = local.automation_object_urls.wsfc
-    sample_script_url             = local.automation_object_urls.sample
-    ag_script_url                 = local.automation_object_urls.ag
-    safe_failover_script_url      = local.automation_object_urls.safe_failover
-    reconcile_script_url          = local.automation_object_urls.reconcile
-    domain_name                   = var.domain_name
-    domain_netbios_name           = var.domain_netbios_name
-    domain_admin_user             = var.domain_admin_user
-    domain_admin_password         = replace(local.effective_domain_admin_password, "'", "''")
-    sql_service_account_user      = var.sql_service_account_user
-    sql_service_account_password  = replace(local.effective_sql_service_password, "'", "''")
-    auto_install_sql_server       = var.auto_install_sql_server
-    install_ssms                  = var.install_ssms
-    sql_server_download_url       = var.sql_server_download_url
-    ssms_download_url             = var.ssms_download_url
-    auto_configure_wsfc           = var.auto_configure_wsfc
-    wsfc_cluster_name             = var.wsfc_cluster_name
-    wsfc_primary_node             = local.wsfc_primary_node
-    wsfc_cluster_nodes            = local.wsfc_cluster_nodes
-    wsfc_cluster_static_addresses = local.wsfc_cluster_static_addresses
-    wsfc_witness_share            = local.wsfc_witness_share
-    skip_cluster_validation       = var.skip_cluster_validation
-    aoag_database_name            = var.aoag_database_name
-    aoag_availability_group_name  = var.aoag_availability_group_name
-    aoag_listener_name            = var.aoag_listener_name
-    aoag_listener_port            = var.aoag_listener_port
-    aoag_listener_ips             = local.aoag_listener_ips
-    hadr_endpoint_name            = var.hadr_endpoint_name
-    hadr_endpoint_port            = var.hadr_endpoint_port
-    sample_database_download_url  = var.sample_database_download_url
-    local_admin_user              = var.local_admin_user
-    windows_admin_password        = replace(local.effective_windows_admin_password, "'", "''")
-    target_computer_name          = "SQL1"
-    dc_private_ip                 = var.dc_private_ip
-    sql_data_drive_letter         = var.sql_data_drive_letter
-  })) : null
+  sql1_user_data = var.auto_configure_windows_nodes ? base64encode(join("\r\n", [
+    "#ps1_sysnative",
+    templatefile("${path.module}/templates/windows-node-user-data.ps1.tftpl", {
+      sql_script_url                = local.automation_object_urls.sql
+      wsfc_script_url               = local.automation_object_urls.wsfc
+      sample_script_url             = local.automation_object_urls.sample
+      ag_script_url                 = local.automation_object_urls.ag
+      safe_failover_script_url      = local.automation_object_urls.safe_failover
+      reconcile_script_url          = local.automation_object_urls.reconcile
+      domain_name                   = var.domain_name
+      domain_netbios_name           = var.domain_netbios_name
+      domain_admin_user             = var.domain_admin_user
+      domain_admin_password         = replace(local.effective_domain_admin_password, "'", "''")
+      sql_service_account_user      = var.sql_service_account_user
+      sql_service_account_password  = replace(local.effective_sql_service_password, "'", "''")
+      auto_install_sql_server       = var.auto_install_sql_server
+      install_ssms                  = var.install_ssms
+      sql_server_download_url       = var.sql_server_download_url
+      ssms_download_url             = var.ssms_download_url
+      auto_configure_wsfc           = var.auto_configure_wsfc
+      wsfc_cluster_name             = var.wsfc_cluster_name
+      wsfc_primary_node             = local.wsfc_primary_node
+      wsfc_cluster_nodes            = local.wsfc_cluster_nodes
+      wsfc_cluster_static_addresses = local.wsfc_cluster_static_addresses
+      wsfc_witness_share            = local.wsfc_witness_share
+      skip_cluster_validation       = var.skip_cluster_validation
+      aoag_database_name            = var.aoag_database_name
+      aoag_availability_group_name  = var.aoag_availability_group_name
+      aoag_listener_name            = var.aoag_listener_name
+      aoag_listener_port            = var.aoag_listener_port
+      aoag_listener_ips             = local.aoag_listener_ips
+      hadr_endpoint_name            = var.hadr_endpoint_name
+      hadr_endpoint_port            = var.hadr_endpoint_port
+      sample_database_download_url  = var.sample_database_download_url
+      local_admin_user              = var.local_admin_user
+      windows_admin_password        = replace(local.effective_windows_admin_password, "'", "''")
+      target_computer_name          = "SQL1"
+      dc_private_ip                 = var.dc_private_ip
+      sql_data_drive_letter         = var.sql_data_drive_letter
+    }),
+  ])) : null
 
-  sql2_user_data = var.auto_configure_windows_nodes ? base64encode(templatefile("${path.module}/templates/windows-node-user-data.ps1.tftpl", {
-    sql_script_url                = local.automation_object_urls.sql
-    wsfc_script_url               = local.automation_object_urls.wsfc
-    sample_script_url             = ""
-    ag_script_url                 = local.automation_object_urls.ag
-    safe_failover_script_url      = local.automation_object_urls.safe_failover
-    reconcile_script_url          = local.automation_object_urls.reconcile
-    domain_name                   = var.domain_name
-    domain_netbios_name           = var.domain_netbios_name
-    domain_admin_user             = var.domain_admin_user
-    domain_admin_password         = replace(local.effective_domain_admin_password, "'", "''")
-    sql_service_account_user      = var.sql_service_account_user
-    sql_service_account_password  = replace(local.effective_sql_service_password, "'", "''")
-    auto_install_sql_server       = var.auto_install_sql_server
-    install_ssms                  = var.install_ssms
-    sql_server_download_url       = var.sql_server_download_url
-    ssms_download_url             = var.ssms_download_url
-    auto_configure_wsfc           = var.auto_configure_wsfc
-    wsfc_cluster_name             = var.wsfc_cluster_name
-    wsfc_primary_node             = local.wsfc_primary_node
-    wsfc_cluster_nodes            = local.wsfc_cluster_nodes
-    wsfc_cluster_static_addresses = local.wsfc_cluster_static_addresses
-    wsfc_witness_share            = local.wsfc_witness_share
-    skip_cluster_validation       = var.skip_cluster_validation
-    aoag_database_name            = var.aoag_database_name
-    aoag_availability_group_name  = var.aoag_availability_group_name
-    aoag_listener_name            = var.aoag_listener_name
-    aoag_listener_port            = var.aoag_listener_port
-    aoag_listener_ips             = local.aoag_listener_ips
-    hadr_endpoint_name            = var.hadr_endpoint_name
-    hadr_endpoint_port            = var.hadr_endpoint_port
-    sample_database_download_url  = var.sample_database_download_url
-    local_admin_user              = var.local_admin_user
-    windows_admin_password        = replace(local.effective_windows_admin_password, "'", "''")
-    target_computer_name          = "SQL2"
-    dc_private_ip                 = var.dc_private_ip
-    sql_data_drive_letter         = var.sql_data_drive_letter
-  })) : null
+  sql2_user_data = var.auto_configure_windows_nodes ? base64encode(join("\r\n", [
+    "#ps1_sysnative",
+    templatefile("${path.module}/templates/windows-node-user-data.ps1.tftpl", {
+      sql_script_url                = local.automation_object_urls.sql
+      wsfc_script_url               = local.automation_object_urls.wsfc
+      sample_script_url             = ""
+      ag_script_url                 = local.automation_object_urls.ag
+      safe_failover_script_url      = local.automation_object_urls.safe_failover
+      reconcile_script_url          = local.automation_object_urls.reconcile
+      domain_name                   = var.domain_name
+      domain_netbios_name           = var.domain_netbios_name
+      domain_admin_user             = var.domain_admin_user
+      domain_admin_password         = replace(local.effective_domain_admin_password, "'", "''")
+      sql_service_account_user      = var.sql_service_account_user
+      sql_service_account_password  = replace(local.effective_sql_service_password, "'", "''")
+      auto_install_sql_server       = var.auto_install_sql_server
+      install_ssms                  = var.install_ssms
+      sql_server_download_url       = var.sql_server_download_url
+      ssms_download_url             = var.ssms_download_url
+      auto_configure_wsfc           = var.auto_configure_wsfc
+      wsfc_cluster_name             = var.wsfc_cluster_name
+      wsfc_primary_node             = local.wsfc_primary_node
+      wsfc_cluster_nodes            = local.wsfc_cluster_nodes
+      wsfc_cluster_static_addresses = local.wsfc_cluster_static_addresses
+      wsfc_witness_share            = local.wsfc_witness_share
+      skip_cluster_validation       = var.skip_cluster_validation
+      aoag_database_name            = var.aoag_database_name
+      aoag_availability_group_name  = var.aoag_availability_group_name
+      aoag_listener_name            = var.aoag_listener_name
+      aoag_listener_port            = var.aoag_listener_port
+      aoag_listener_ips             = local.aoag_listener_ips
+      hadr_endpoint_name            = var.hadr_endpoint_name
+      hadr_endpoint_port            = var.hadr_endpoint_port
+      sample_database_download_url  = var.sample_database_download_url
+      local_admin_user              = var.local_admin_user
+      windows_admin_password        = replace(local.effective_windows_admin_password, "'", "''")
+      target_computer_name          = "SQL2"
+      dc_private_ip                 = var.dc_private_ip
+      sql_data_drive_letter         = var.sql_data_drive_letter
+    }),
+  ])) : null
 }
 
 resource "oci_core_instance" "dc" {
