@@ -137,3 +137,6 @@ Treat `terraform.tfvars`, rendered instance metadata, and Terraform state as sen
 The PowerShell payloads are uploaded to a private Object Storage bucket because OCI limits combined instance metadata to 32 KB. Terraform creates read-only, object-specific pre-authenticated requests expiring at `automation_artifact_expiration`; refresh that variable before a later deployment after the expiry date.
 
 The default shape sizing is 6 OCPUs and 16 GB RAM for `DC-VM`, and 8 OCPUs and 32 GB RAM for each SQL node through `sql_ocpus` and `sql_memory_in_gbs`. All boot volumes default to 100 GB. Each SQL node also receives a 100 GB local block volume, formatted as `F:` and used for SQL data, logs, and backup files. SQL binaries and SSMS remain on the boot volume.
+
+#Post-Deployment Readiness
+##Terraform completes infrastructure provisioning before guest automation finishes. Allow approximately 15-30 minutes for Active Directory promotion, domain joins, SQL Server installation, WSFC, database restore, availability group creation, listener configuration, and synchronization before testing failover.
